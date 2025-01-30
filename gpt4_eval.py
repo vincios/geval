@@ -7,11 +7,12 @@ import time
 if __name__ == '__main__':
 
     argparser = argparse.ArgumentParser()
-    argparser.add_argument('--prompt_fp', type=str, default='prompts\summeval\con_detailed.txt')
-    argparser.add_argument('--save_fp', type=str, default='results\gpt4_con_detailed_openai.json')
-    argparser.add_argument('--summeval_fp', type=str, default='data\summeval.json')
+    argparser.add_argument('--prompt_fp', type=str, default='prompts/topical_chat/eng_detailed.txt')
+    argparser.add_argument('--save_fp', type=str, default='results/gpt4_eng_detailed_openai.json')
+    argparser.add_argument('--topical_fp', type=str, default='data/topical_chat.json')
     argparser.add_argument('--key', type=str, required=True)
     argparser.add_argument('--model', type=str, default='gpt-4-0613')
+
     args = argparser.parse_args()
     openai.api_key = args.key
 
@@ -24,8 +25,11 @@ if __name__ == '__main__':
     for instance in tqdm.tqdm(summeval):
         source = instance['source']
         system_output = instance['system_output']
-        cur_prompt = prompt.replace('{{Document}}', source).replace('{{Summary}}', system_output)
+        context = instance['context']
+        cur_prompt = prompt.replace('{{Document}}', source).replace('{{Summary}}', system_output).replace('{{Fact}}', context)
         instance['prompt'] = cur_prompt
+        instance['doc_id'] = 'dm-test-' + str(abs(hash(source)))
+
         while True:
             try:
                 _response = openai.ChatCompletion.create(
